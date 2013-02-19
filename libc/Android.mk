@@ -179,7 +179,6 @@ libc_common_src_files := \
 	stdlib/wchar.c \
 	string/index.c \
 	string/memccpy.c \
-	string/memchr.c \
 	string/memmem.c \
 	string/memrchr.c \
 	string/memswap.c \
@@ -279,6 +278,7 @@ libc_common_src_files := \
 	bionic/libc_init_common.c \
 	bionic/logd_write.c \
 	bionic/md5.c \
+	bionic/memmove_words.c \
 	bionic/pututline.c \
 	bionic/realpath.c \
 	bionic/sched_getaffinity.c \
@@ -388,9 +388,12 @@ libc_common_src_files += \
 	string/strncmp.c \
 	unistd/socketcalls.c
 
+# String routines optimized for ARMv7
 ifeq ($(ARCH_ARM_HAVE_ARMV7A),true)
+libc_common_src_files += arch-arm/bionic/memchr.S
 libc_common_src_files += arch-arm/bionic/strlen-armv7.S
 else
+libc_common_src_files += string/memchr.c
 libc_common_src_files += arch-arm/bionic/strlen.c.arm
 endif
 
@@ -403,21 +406,14 @@ endif
 
 # Check if we want a neonized version of memmove instead of the
 # current ARM version
-ifeq ($(TARGET_USE_SCORPION_BIONIC_OPTIMIZATION),true)
-libc_common_src_files += \
-	arch-arm/bionic/memmove.S \
-	bionic/memmove_words.c
-else
 ifeq ($(ARCH_ARM_HAVE_NEON),true)
  libc_common_src_files += \
 	arch-arm/bionic/memmove.S
  else # Other ARM
  libc_common_src_files += \
 	string/bcopy.c \
-	string/memmove.c.arm \
-	bionic/memmove_words.c
- endif # !TARGET_USE_KRAIT_BIONIC_OPTIMIZATION
-endif # !TARGET_USE_SCORPION_BIONIC_OPTIMIZATION
+	string/memmove.c.arm
+endif # ARCH_ARM_HAVE_NEON
 
 # If the kernel supports kernel user helpers for gettimeofday, use
 # that instead.
