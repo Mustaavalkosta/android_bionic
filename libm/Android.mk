@@ -149,7 +149,7 @@ libm_common_src_files:= \
 	src/s_isnan.c \
 	src/s_modf.c
 
-libm_common_cflags :=
+libm_common_cflags := -DHARDFLOAT
 
 ifeq ($(TARGET_ARCH),arm)
   libm_common_src_files += \
@@ -174,6 +174,10 @@ ifeq ($(TARGET_ARCH),arm)
     libm_common_src_files += \
 	  src/s_cos.c \
 	  src/s_sin.c
+  endif
+
+  ifeq ($(TARGET_USE_SPARROW_BIONIC_OPTIMIZATION),true)
+    libm_common_cflags += -DSPARROW_NEON_OPTIMIZATION -fno-if-conversion
   endif
 
   libm_common_includes = $(LOCAL_PATH)/arm

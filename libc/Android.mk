@@ -185,7 +185,6 @@ libc_common_src_files := \
 	string/strcasecmp.c \
 	string/strcasestr.c \
 	string/strcat.c \
-	string/strchr.c \
 	string/strcoll.c \
 	string/strcspn.c \
 	string/strdup.c \
@@ -369,6 +368,7 @@ libc_common_src_files += \
 	arch-arm/bionic/_setjmp.S \
 	arch-arm/bionic/abort_arm.S \
 	arch-arm/bionic/atomics_arm.c \
+	arch-arm/bionic/bzero.S \
 	arch-arm/bionic/clone.S \
 	arch-arm/bionic/eabi.c \
 	arch-arm/bionic/ffs.S \
@@ -377,40 +377,29 @@ libc_common_src_files += \
 	arch-arm/bionic/libgcc_compat.c \
 	arch-arm/bionic/tkill.S \
 	arch-arm/bionic/tgkill.S \
+	arch-arm/bionic/memchr.S \
 	arch-arm/bionic/memcmp.S \
 	arch-arm/bionic/memcmp16.S \
 	arch-arm/bionic/memset.S \
 	arch-arm/bionic/setjmp.S \
 	arch-arm/bionic/sigsetjmp.S \
+	arch-arm/bionic/strchr.S \
 	arch-arm/bionic/strcpy.S \
 	arch-arm/bionic/strcmp.S \
+	arch-arm/bionic/strlen.S \
 	arch-arm/bionic/syscall.S \
 	string/strncmp.c \
 	unistd/socketcalls.c
-
-# String routines optimized for ARMv7
-ifeq ($(ARCH_ARM_HAVE_ARMV7A),true)
-libc_common_src_files += arch-arm/bionic/memchr.S
-libc_common_src_files += arch-arm/bionic/strlen-armv7.S
-else
-libc_common_src_files += string/memchr.c
-libc_common_src_files += arch-arm/bionic/strlen.c.arm
-endif
-
-# We have a special memcpy for A15 currently
-ifeq ($(TARGET_ARCH_VARIANT_CPU),cortex-a15)
-libc_common_src_files += arch-arm/bionic/memcpy-a15.S
-else
-libc_common_src_files += arch-arm/bionic/memcpy.S
-endif
 
 # Check if we want a neonized version of memmove instead of the
 # current ARM version
 ifeq ($(ARCH_ARM_HAVE_NEON),true)
  libc_common_src_files += \
-	arch-arm/bionic/memmove.S
+	arch-arm/bionic/memmove.S \
+	arch-arm/bionic/memcpy.S
  else # Other ARM
  libc_common_src_files += \
+	arch-arm/bionic/memcpy-non-neon.S \
 	string/bcopy.c \
 	string/memmove.c.arm
 endif # ARCH_ARM_HAVE_NEON
@@ -569,7 +558,7 @@ ifneq ($(BOARD_MALLOC_ALIGNMENT),)
 endif
 
 ifeq ($(TARGET_ARCH),arm)
-  libc_common_cflags += -DSOFTFLOAT
+  libc_common_cflags += -DHARDFLOAT
   libc_common_cflags += -fstrict-aliasing
   libc_crt_target_cflags := -mthumb-interwork
   #
